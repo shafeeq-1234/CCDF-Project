@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Blueprint, jsonify, render_template, request, send_file
+from flask import Blueprint, current_app, jsonify, render_template, request, send_file
 
 from app import db
 from app.models.case import Case
@@ -16,7 +16,6 @@ from app.services.reporting import generate_case_report
 log = logging.getLogger(__name__)
 reports_bp = Blueprint("reports", __name__)
 reports_api = Blueprint("reports_api", __name__)
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 @reports_bp.route("/reports")
@@ -42,7 +41,7 @@ def api_generate(case_id):
     suspicion_summary = f"{flagged} potentially suspicious files out of {len(files)}."
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     fname = f"CyberTrace-{case.case_number}-{ts}.pdf"
-    out = str(PROJECT_ROOT / "reports" / fname)
+    out = str(Path(current_app.config["REPORTS_DIR"]) / fname)
     try:
         generate_case_report(case, sources, files, events, integrity_summary, suspicion_summary, out)
     except Exception as exc:
@@ -60,7 +59,7 @@ def api_download(filename):
     safe = os.path.basename(filename)
     if safe != filename or not safe.lower().endswith(".pdf"):
         return jsonify({"error": "Invalid filename."}), 400
-    full = PROJECT_ROOT / "reports" / safe
+    full = Path(current_app.config["REPORTS_DIR"]) / safe
     if not full.exists():
         return jsonify({"error": "Report not found."}), 404
     return send_file(str(full), as_attachment=True, download_name=safe)
