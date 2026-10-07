@@ -31,7 +31,7 @@ Python 3.11+, Flask, SQLAlchemy, SQLite, Bootstrap 5, Chart.js, Pillow, pypdf,
 python-docx, ReportLab, pytest.
 
 ## Project structure
-See `/app` (models/routes/services/templates/static), `/tests`, `/demo_evidence`, `/reports`, `run.py`, `config.py`.
+See `/app` (models/routes/services/templates/static), `/tests`, `/demo_evidence`, `/reports`, `server.py`, `config.py`.
 
 ## Installation
 ```bash
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ## Running
 ```bash
-python run.py
+python server.py
 # open http://127.0.0.1:5000
 ```
 Database auto-creates at `instance/cybertrace.db`. Copy `.env.example` to `.env` to override secret/debug.
@@ -77,12 +77,16 @@ hash-set lookup, deduplication view.
 
 ## Deploying to Vercel (demo / evaluation hosting)
 
-The repo includes `api/index.py` (serverless Flask handler) and `vercel.json`
-(rewrite all requests to the handler, 60 s function timeout).
+Deployment is zero-config: `server.py` exposes the Flask `app` object using
+one of Vercel's recognised entrypoint filenames, so Vercel detects it as a
+Flask framework preset and routes every request to it with original URL
+paths intact. (Do not rename it to `app.py` — that filename collides with
+the `app/` package and crashes the deployment. Do not add catch-all
+rewrites to `vercel.json` — rewriting destroys the original request path.)
 
 ```bash
-git add api/index.py vercel.json config.py app/__init__.py app/routes/reports.py tests/test_csrf_api.py
-git commit -m "Add Vercel serverless deployment support"
+git add -A
+git commit -m "Deploy to Vercel via Flask framework preset (server.py)"
 git push
 # then: Vercel dashboard → Add New Project → import this repo → Deploy
 ```
@@ -97,7 +101,7 @@ Serverless caveats (important for viva/demo):
 - Data is **ephemeral**: each cold start / instance gets a fresh empty
   database. Click **Load Demo Investigation** after every fresh visit to
   repopulate the demo case.
-- For persistent local use (full chain-of-custody history), run `python run.py`
+- For persistent local use (full chain-of-custody history), run `python server.py`
   locally instead — the local SQLite file persists normally.
 
 ## Academic disclaimer
