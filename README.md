@@ -75,6 +75,31 @@ no timeline carving; signature table covers common types; large repos may need p
 Timeline visualisation, YARA-style rule packs (opt-in), multi-user auth, export CSV/JSON,
 hash-set lookup, deduplication view.
 
+## Deploying to Vercel (demo / evaluation hosting)
+
+The repo includes `api/index.py` (serverless Flask handler) and `vercel.json`
+(rewrite all requests to the handler, 60 s function timeout).
+
+```bash
+git add api/index.py vercel.json config.py app/__init__.py app/routes/reports.py tests/test_csrf_api.py
+git commit -m "Add Vercel serverless deployment support"
+git push
+# then: Vercel dashboard → Add New Project → import this repo → Deploy
+```
+
+No extra configuration is needed. Vercel auto-detects Python from
+`requirements.txt`. Optional environment variable for production:
+`CYBERTRACE_SECRET_KEY` (random string for session signing).
+
+Serverless caveats (important for viva/demo):
+- The filesystem is read-only except `/tmp`, so the app automatically stores
+  the SQLite database and generated PDFs under `/tmp` when `VERCEL=1` is set.
+- Data is **ephemeral**: each cold start / instance gets a fresh empty
+  database. Click **Load Demo Investigation** after every fresh visit to
+  repopulate the demo case.
+- For persistent local use (full chain-of-custody history), run `python app.py`
+  locally instead — the local SQLite file persists normally.
+
 ## Academic disclaimer
 Built for coursework demonstration and IEEE-style reporting (metrics, tables, charts from real runs).
 Do not present as legally certified forensic software.

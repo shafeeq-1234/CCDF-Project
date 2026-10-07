@@ -19,8 +19,8 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
-    os.makedirs(os.path.join(os.path.dirname(app.root_path), "instance"), exist_ok=True)
-    os.makedirs(os.path.join(os.path.dirname(app.root_path), "reports"), exist_ok=True)
+    os.makedirs(app.config["INSTANCE_DIR"], exist_ok=True)
+    os.makedirs(app.config["REPORTS_DIR"], exist_ok=True)
 
     db.init_app(app)
     csrf.init_app(app)
@@ -56,14 +56,12 @@ def create_app(test_config=None):
     app.register_blueprint(reports_bp)
     app.register_blueprint(reports_api)
 
-    # Exempt JSON API from CSRF (session forms still protected)
-    csrf.exempt("app.routes.dashboard.dashboard_api")
-    csrf.exempt("app.routes.cases.cases_api")
-    csrf.exempt("app.routes.evidence.evidence_api")
-    csrf.exempt("app.routes.analysis.analysis_api")
-    csrf.exempt("app.routes.integrity.integrity_api")
-    csrf.exempt("app.routes.custody.custody_api")
-    csrf.exempt("app.routes.reports.reports_api")
+    # Exempt JSON API blueprints from CSRF (session forms still protected).
+    # NOTE: must pass the Blueprint objects — string names are not honoured
+    # by CSRFProtect.exempt in current Flask-WTF versions.
+    for _api_bp in (dashboard_api, cases_api, evidence_api, analysis_api,
+                    integrity_api, custody_api, reports_api):
+        csrf.exempt(_api_bp)
 
     # Import models so tables are known
     from app.models import case, custody, evidence, file_record, hash_record  # noqa: F401
