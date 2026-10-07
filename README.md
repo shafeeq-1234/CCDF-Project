@@ -103,3 +103,9 @@ Serverless caveats (important for viva/demo):
 ## Academic disclaimer
 Built for coursework demonstration and IEEE-style reporting (metrics, tables, charts from real runs).
 Do not present as legally certified forensic software.
+
+
+## Authors
+Shaik Shafeeq
+J Koushik Baradhwaj
+Radheya A
