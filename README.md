@@ -31,7 +31,7 @@ Python 3.11+, Flask, SQLAlchemy, SQLite, Bootstrap 5, Chart.js, Pillow, pypdf,
 python-docx, ReportLab, pytest.
 
 ## Project structure
-See `/app` (models/routes/services/templates/static), `/tests`, `/demo_evidence`, `/reports`, `app.py`, `config.py`.
+See `/app` (models/routes/services/templates/static), `/tests`, `/demo_evidence`, `/reports`, `run.py`, `config.py`.
 
 ## Installation
 ```bash
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ## Running
 ```bash
-python app.py
+python run.py
 # open http://127.0.0.1:5000
 ```
 Database auto-creates at `instance/cybertrace.db`. Copy `.env.example` to `.env` to override secret/debug.
@@ -97,7 +97,7 @@ Serverless caveats (important for viva/demo):
 - Data is **ephemeral**: each cold start / instance gets a fresh empty
   database. Click **Load Demo Investigation** after every fresh visit to
   repopulate the demo case.
-- For persistent local use (full chain-of-custody history), run `python app.py`
+- For persistent local use (full chain-of-custody history), run `python run.py`
   locally instead — the local SQLite file persists normally.
 
 ## Academic disclaimer
