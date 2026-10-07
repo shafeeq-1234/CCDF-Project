@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Evidence Integrity</h2>
+<p class="text-secondary">SHA-256 is used as the primary integrity verification mechanism. A mismatch means file contents changed since the recorded hash — it does not identify who changed it.</p>
+<div class="mb-2"><button class="btn btn-success" id="btn-all">✔ Verify All (current case filter)</button>
+<input id="v-case" placeholder="case_id (optional)" class="form-control-sm"> <span id="v-msg"></span></div>
+<div class="card"><div class="card-header">Integrity mismatches / errors</div><div class="card-body table-responsive">
+<table class="table table-sm table-striped" id="tbl-int"><thead><tr><th>File</th><th>Original</th><th>Current</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+</div></div>
+<div class="card mt-3"><div class="card-header">Integrity Test (controlled demo)</div><div class="card-body small">
+<ol><li>Note the current SHA-256 of a demo file below.</li><li>Manually edit that demo file (e.g. append text in Notepad).</li><li>Click “Verify” for that file — the system recomputes SHA-256 and shows BEFORE / AFTER / RESULT.</li></ol>
+<p class="text-warning">CyberTrace never modifies evidence automatically for this demo.</p>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadInt(){
+  const r=await fetch('/api/evidence?per_page=100&integrity=MISMATCH'); const j=await r.json();
+  const r2=await fetch('/api/evidence?per_page=100&integrity=ERROR'); const j2=await r2.json();
+  const items=[...j.items, ...j2.items];
+  const tb=document.querySelector('#tbl-int tbody'); tb.innerHTML='';
+  if(!items.length) tb.innerHTML='<tr><td colspan=5 class="text-success">No mismatches — all checked files verified ✔</td></tr>';
+  items.forEach(x=>{ const tr=document.createElement('tr');
+    tr.innerHTML=`<td><a href="/evidence/${x.id}">${x.relative_path}</a></td><td><small>${(x.sha256||'').slice(0,20)}…</small></td><td>—</td><td><span class="badge bg-danger">${x.integrity_status}</span></td><td><button class="btn btn-sm btn-outline-success" onclick="verifyOne(${x.id})">Verify</button></td>`;
+    tb.appendChild(tr); });
+}
+async function verifyOne(id){
+  const r=await fetch('/api/evidence/'+id+'/verify',{method:'POST'}); const j=await r.json();
+  alert(`BEFORE: ${j.original}\nAFTER: ${j.current}\nRESULT: ${j.status}\n${j.error||''}`);
+  loadInt();
+}
+document.getElementById('btn-all').onclick=async ()=>{
+  document.getElementById('v-msg').textContent='Verifying…';
+  const cid=document.getElementById('v-case').value;
+  const r=await fetch('/api/integrity/verify-all',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cid?{case_id:cid}:{})});
+  const j=await r.json();
+  document.getElementById('v-msg').textContent=`Checked ${j.checked}: ${JSON.stringify(j.summary)}`;
+  loadInt();
+};
+loadInt();
+</script>
+{% endblock %}

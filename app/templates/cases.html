@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Cases</h2>
+<div class="card mb-3"><div class="card-header">Create Investigation Case</div><div class="card-body">
+<form id="f-case" class="row g-2">
+  <div class="col-md-3"><input class="form-control" id="c-num" placeholder="Case ID (auto e.g. CT-2026-001)"></div>
+  <div class="col-md-3"><input class="form-control" id="c-title" placeholder="Case title *" required></div>
+  <div class="col-md-3"><input class="form-control" id="c-inv" placeholder="Investigator" value="Student Investigator"></div>
+  <div class="col-md-2"><select class="form-select" id="c-status"><option>Open</option><option>In Progress</option><option>Closed</option></select></div>
+  <div class="col-md-12"><textarea class="form-control" id="c-desc" placeholder="Description"></textarea></div>
+  <div class="col-md-12"><button class="btn btn-info" type="submit">Create Case</button>
+  <button class="btn btn-warning" type="button" id="btn-demo">⚡ Load Demo Investigation (CT-DEMO-001)</button>
+  <span id="case-msg" class="ms-2"></span></div>
+</form></div></div>
+<div class="card"><div class="card-header">All Cases</div><div class="card-body table-responsive">
+<table class="table table-striped" id="tbl-cases"><thead><tr><th>Case ID</th><th>Title</th><th>Investigator</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody></tbody></table>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadCases(){
+  const r = await fetch('/api/cases'); const data = await r.json();
+  const tb = document.querySelector('#tbl-cases tbody'); tb.innerHTML='';
+  data.forEach(c=>{ const tr=document.createElement('tr');
+    tr.innerHTML=`<td><b>${c.case_number}</b></td><td>${c.title}</td><td>${c.investigator}</td><td><span class="badge bg-secondary">${c.status}</span></td><td>${c.created_at||''}</td><td><a class="btn btn-sm btn-outline-info" href="/cases/${c.id}">Open</a></td>`;
+    tb.appendChild(tr); });
+}
+document.getElementById('f-case').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const body={case_number:document.getElementById('c-num').value, title:document.getElementById('c-title').value,
+    investigator:document.getElementById('c-inv').value, status:document.getElementById('c-status').value,
+    description:document.getElementById('c-desc').value};
+  const r=await fetch('/api/cases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json();
+  document.getElementById('case-msg').textContent = r.ok ? 'Created '+j.case_number : ('Error: '+(j.error||r.status));
+  loadCases();
+});
+document.getElementById('btn-demo').addEventListener('click', async ()=>{
+  document.getElementById('case-msg').textContent='Loading demo... (scans demo_evidence/)';
+  const r=await fetch('/api/demo/load',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+  const j=await r.json();
+  document.getElementById('case-msg').textContent = r.ok ? `Demo ready: ${j.case_number}, ${j.processed} files` : ('Error: '+(j.error||r.status));
+  loadCases();
+});
+loadCases();
+</script>
+{% endblock %}

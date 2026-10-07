@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Evidence Acquisition &amp; Browser</h2>
+<div class="card mb-3"><div class="card-header">Add Evidence Source (scan a folder — read-only)</div><div class="card-body">
+<form id="f-scan" class="row g-2">
+  <div class="col-md-3"><select class="form-select" id="s-case" required><option value="">Select case…</option>{% for c in cases %}<option value="{{ c.id }}">{{ c.case_number }} — {{ c.title }}</option>{% endfor %}</select></div>
+  <div class="col-md-4"><input class="form-control" id="s-path" placeholder="Source path (default: demo_evidence)" value="demo_evidence"></div>
+  <div class="col-md-2"><input class="form-control" id="s-inv" value="Student Investigator"></div>
+  <div class="col-md-3"><input class="form-control" id="s-desc" placeholder="Description"></div>
+  <div class="col-md-12"><button class="btn btn-primary" type="submit">🔍 Scan Evidence</button> <span id="scan-msg"></span></div>
+</form>
+<p class="small text-secondary mt-2 mb-0">Scanner is read-only: never modifies originals, never follows symlinks outside the evidence root, blocks path traversal, and records per-file errors without aborting.</p>
+</div></div>
+<div class="card"><div class="card-header">Evidence Files — search / filter / sort
+  <span class="float-end small"><input id="q" placeholder="search filename…" class="form-control-sm"> <select id="f-level" class="form-select-sm"><option value="">all levels</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select>
+  <select id="f-int" class="form-select-sm"><option value="">any integrity</option><option>VERIFIED</option><option>MISMATCH</option><option>ERROR</option></select>
+  <button class="btn btn-sm btn-secondary" id="btn-go">Apply</button></span></div>
+<div class="card-body table-responsive"><table class="table table-sm table-striped" id="tbl-ev">
+<thead><tr><th>Evidence ID</th><th>File</th><th>Type</th><th>Size</th><th>SHA-256</th><th>Suspicion</th><th>Integrity</th></tr></thead><tbody></tbody></table>
+<nav><ul class="pagination pagination-sm" id="pager"></ul></nav>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+let page=1;
+async function loadEv(){
+  const params=new URLSearchParams({page, per_page:25, search:document.getElementById('q').value,
+    level:document.getElementById('f-level').value, integrity:document.getElementById('f-int').value});
+  const r=await fetch('/api/evidence?'+params); const j=await r.json();
+  const tb=document.querySelector('#tbl-ev tbody'); tb.innerHTML='';
+  j.items.forEach(x=>{ const tr=document.createElement('tr');
+    tr.innerHTML=`<td>EV-${x.evidence_source_id}</td><td><a href="/evidence/${x.id}">${x.relative_path}</a></td><td>${x.extension}</td><td>${x.size}</td><td><small>${(x.sha256||'').slice(0,20)}…</small></td><td><span class="badge bg-${x.suspicion_level=='CRITICAL'?'danger':x.suspicion_level=='HIGH'?'warning':x.suspicion_level=='MEDIUM'?'info':'secondary'}">${x.suspicion_level} ${x.suspicion_score}</span></td><td>${x.integrity_status}</td>`;
+    tb.appendChild(tr); });
+  const pg=document.getElementById('pager'); pg.innerHTML='';
+  const totalPages=Math.max(1, Math.ceil(j.total/j.per_page));
+  for(let i=1;i<=Math.min(totalPages,10);i++){ const li=document.createElement('li'); li.className='page-item'+(i==page?' active':'');
+    li.innerHTML=`<a class="page-link" href="#">${i}</a>`; li.onclick=(e)=>{e.preventDefault();page=i;loadEv();}; pg.appendChild(li); }
+}
+document.getElementById('btn-go').onclick=()=>{page=1;loadEv();};
+document.getElementById('f-scan').addEventListener('submit', async e=>{
+  e.preventDefault();
+  document.getElementById('scan-msg').textContent='Scanning… this performs real enumeration, hashing, metadata, signature & scoring.';
+  const body={case_id:document.getElementById('s-case').value, source_path:document.getElementById('s-path').value,
+    investigator:document.getElementById('s-inv').value, description:document.getElementById('s-desc').value};
+  const r=await fetch('/api/evidence/scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json();
+  document.getElementById('scan-msg').textContent = r.ok ? `Done: ${j.processed} files, ${j.errors.length} errors.` : ('Error: '+(j.error||r.status));
+  loadEv();
+});
+loadEv();
+</script>
+{% endblock %}

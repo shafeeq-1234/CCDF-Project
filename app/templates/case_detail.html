@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Case {{ case.case_number }}</h2>
+<p><b>{{ case.title }}</b> · {{ case.investigator }} · <span class="badge bg-secondary">{{ case.status }}</span></p>
+<p class="text-secondary">{{ case.description }}</p>
+<div class="row g-3">
+<div class="col-md-6"><div class="card"><div class="card-header">Evidence Sources</div><div class="card-body" id="case-sources">Loading…</div></div></div>
+<div class="col-md-6"><div class="card"><div class="card-header">Chain of Custody Timeline</div><div class="card-body"><div class="timeline" id="case-custody">Loading…</div></div></div></div>
+</div>
+<div class="card mt-3"><div class="card-header">Files in this Case</div><div class="card-body table-responsive">
+<table class="table table-sm table-striped" id="tbl-case-files"><thead><tr><th>File</th><th>Type</th><th>Size</th><th>SHA-256</th><th>Suspicion</th><th>Integrity</th></tr></thead><tbody></tbody></table>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const CASE_ID = {{ case.id }};
+async function load(){
+  const r = await fetch('/api/cases/'+CASE_ID); const c = await r.json();
+  document.getElementById('case-sources').innerHTML = (c.evidence_sources||[]).map(s=>`<div>🔹 <b>#${s.id}</b> ${s.source_path}<br><small class="text-secondary">${s.acquired_at} · ${s.file_count} files · ${s.status}</small></div><hr>`).join('') || 'No evidence yet.';
+  document.getElementById('case-custody').innerHTML = (c.custody_events||[]).map(e=>`<div class="tl-item"><b>${e.action}</b> <small class="text-secondary">${e.timestamp}</small><br>${e.actor} — ${e.description}</div>`).join('') || 'No custody events.';
+  const f = await (await fetch('/api/evidence?case_id='+CASE_ID+'&per_page=100')).json();
+  const tb=document.querySelector('#tbl-case-files tbody'); tb.innerHTML='';
+  f.items.forEach(x=>{ const tr=document.createElement('tr');
+    tr.innerHTML=`<td><a href="/evidence/${x.id}">${x.relative_path}</a></td><td>${x.extension} / ${x.mime_type}</td><td>${x.size}</td><td><small>${(x.sha256||'').slice(0,16)}…</small></td><td><span class="badge bg-${x.suspicion_level=='CRITICAL'?'danger':x.suspicion_level=='HIGH'?'warning':'secondary'}">${x.suspicion_level} ${x.suspicion_score}</span></td><td>${x.integrity_status}</td>`;
+    tb.appendChild(tr); });
+}
+load();
+</script>
+{% endblock %}

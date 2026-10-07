@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard <small class="text-secondary fs-6">live database metrics</small></h2>
+<div class="row g-3 my-2" id="stat-cards">
+  <div class="col-md-3"><div class="card stat"><div class="card-body"><div class="stat-label">Total Cases</div><div class="stat-value" id="s-cases">–</div></div></div></div>
+  <div class="col-md-3"><div class="card stat"><div class="card-body"><div class="stat-label">Evidence Files</div><div class="stat-value" id="s-files">–</div></div></div></div>
+  <div class="col-md-3"><div class="card stat"><div class="card-body"><div class="stat-label">Potentially Suspicious</div><div class="stat-value text-warning" id="s-susp">–</div></div></div></div>
+  <div class="col-md-3"><div class="card stat"><div class="card-body"><div class="stat-label">High / Critical</div><div class="stat-value text-danger" id="s-high">–</div></div></div></div>
+  <div class="col-md-4"><div class="card stat"><div class="card-body"><div class="stat-label">Integrity Verified</div><div class="stat-value text-success" id="s-ver">–</div></div></div></div>
+  <div class="col-md-4"><div class="card stat"><div class="card-body"><div class="stat-label">Integrity Mismatch</div><div class="stat-value text-danger" id="s-mis">–</div></div></div></div>
+  <div class="col-md-4"><div class="card stat"><div class="card-body"><div class="stat-label">Custody Events</div><div class="stat-value" id="s-cust">–</div></div></div></div>
+</div>
+<div class="row g-3">
+  <div class="col-md-6"><div class="card"><div class="card-header">File Type Distribution</div><div class="card-body"><canvas id="ch-types"></canvas></div></div></div>
+  <div class="col-md-6"><div class="card"><div class="card-header">Suspicion Levels</div><div class="card-body"><canvas id="ch-susp"></canvas></div></div></div>
+  <div class="col-md-4"><div class="card"><div class="card-header">Integrity Status</div><div class="card-body"><canvas id="ch-int"></canvas></div></div></div>
+  <div class="col-md-4"><div class="card"><div class="card-header">Files by Size</div><div class="card-body"><canvas id="ch-size"></canvas></div></div></div>
+  <div class="col-md-4"><div class="card"><div class="card-header">Analysis Timeline</div><div class="card-body"><canvas id="ch-time"></canvas></div></div></div>
+</div>
+<div class="card mt-3"><div class="card-header">Top Potentially Suspicious Files</div>
+<div class="card-body table-responsive"><table class="table table-sm table-striped" id="tbl-susp">
+<thead><tr><th>File</th><th>Score</th><th>Level</th><th>Reasons</th></tr></thead><tbody></tbody>
+</table></div></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

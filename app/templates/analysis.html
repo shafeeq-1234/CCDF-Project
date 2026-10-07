@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Forensic File Analysis</h2>
+<div id="wrap"><p class="text-secondary">Loading analysis…</p></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
+{% if file_id is defined and file_id %}
+<script>loadFileAnalysis({{ file_id }});</script>
+{% else %}
+<script>loadSuspiciousTable();</script>
+{% endif %}
+{% endblock %}

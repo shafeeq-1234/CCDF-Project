@@ -1,0 +1,14 @@
+body{background:#0b1220;color:#dbe4f0}
+.sidebar{background:#0f172a;min-height:100vh;border-right:1px solid #1e293b}
+.sidebar .list-group-item{background:transparent;color:#cbd5e1;border:none}
+.sidebar .list-group-item:hover{background:#1e293b;color:#fff}
+.card{background:#111c30;border:1px solid #243449;color:#dbe4f0}
+.card-header{background:#16233c;font-weight:600;color:#7dd3fc}
+.stat-value{font-size:1.8rem;font-weight:700}
+.stat-label{color:#94a3b8;font-size:.85rem;text-transform:uppercase}
+.table{color:#dbe4f0}
+.table a{color:#7dd3fc}
+.timeline{border-left:3px solid #0ea5e9;padding-left:12px}
+.tl-item{background:#0f172a;border:1px solid #243449;border-radius:6px;padding:8px 10px;margin-bottom:8px}
+.hash{font-family:monospace;word-break:break-all;font-size:.8rem}
+canvas{max-height:300px}

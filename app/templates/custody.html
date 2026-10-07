@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Chain of Custody</h2>
+<p class="text-secondary">Append-only log. Corrections are recorded as new events — history is never edited.</p>
+<div class="card mb-3"><div class="card-header">Record Custody Event</div><div class="card-body">
+<form id="f-c" class="row g-2">
+<div class="col-md-2"><input class="form-control" id="cc-case" placeholder="case_id *"></div>
+<div class="col-md-2"><input class="form-control" id="cc-ev" placeholder="evidence_id"></div>
+<div class="col-md-2"><input class="form-control" id="cc-actor" value="Student Investigator"></div>
+<div class="col-md-2"><select class="form-select" id="cc-action"><option>Evidence Acquired</option><option>Evidence Registered</option><option>Evidence Analyzed</option><option>Integrity Verified</option><option>Evidence Reviewed</option><option>Report Generated</option></select></div>
+<div class="col-md-4"><input class="form-control" id="cc-desc" placeholder="description"></div>
+<div class="col-md-12"><button class="btn btn-info btn-sm" type="submit">Add Event</button> <span id="cc-msg"></span></div>
+</form></div></div>
+<div class="card"><div class="card-header">Timeline <input id="cq-case" placeholder="filter case_id" class="form-control-sm"></div>
+<div class="card-body"><div class="timeline" id="custody-tl"></div>
+<div class="table-responsive mt-3"><table class="table table-sm table-striped" id="tbl-c"><thead><tr><th>Event</th><th>Investigator</th><th>Timestamp</th><th>Description</th></tr></thead><tbody></tbody></table></div>
+</div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadC(){
+  const cid=document.getElementById('cq-case').value;
+  const r=await fetch('/api/custody'+(cid?('?case_id='+cid):'')); const j=await r.json();
+  document.getElementById('custody-tl').innerHTML = j.map(e=>`<div class="tl-item"><b>${e.action}</b> <small class="text-secondary">${e.timestamp}</small><br>${e.actor} — ${e.description||''}</div>`).join('')||'No events.';
+  const tb=document.querySelector('#tbl-c tbody'); tb.innerHTML='';
+  j.forEach(e=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${e.action}</td><td>${e.actor}</td><td>${e.timestamp}</td><td>${e.description||''}</td>`; tb.appendChild(tr); });
+}
+document.getElementById('cq-case').addEventListener('change', loadC);
+document.getElementById('f-c').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const body={case_id:document.getElementById('cc-case').value, evidence_id:document.getElementById('cc-ev').value||null,
+    actor:document.getElementById('cc-actor').value, action:document.getElementById('cc-action').value, description:document.getElementById('cc-desc').value};
+  const r=await fetch('/api/custody',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json();
+  document.getElementById('cc-msg').textContent = r.ok ? 'Recorded event #'+j.id : ('Error: '+(j.error||r.status));
+  loadC();
+});
+loadC();
+</script>
+{% endblock %}
